@@ -1,4 +1,4 @@
-# How to install datasets
+conda# How to install datasets
 
 ### Acknowledgement: This readme file for installing datasets has been borrowed directly from [CoOp's](https://github.com/KaiyangZhou/CoOp/blob/main/DATASETS.md) official repository.
 
@@ -14,6 +14,7 @@ $DATA/
 If you have some datasets already installed somewhere else, you can create symbolic links in `$DATA/dataset_name` that point to the original data to avoid duplicate download.
 
 Datasets list:
+- [Acknowledgement: This readme file for installing datasets has been borrowed directly from CoOp's official repository.](#acknowledgement-this-readme-file-for-installing-datasets-has-been-borrowed-directly-from-coops-official-repository)
 - [Caltech101](#caltech101)
 - [OxfordPets](#oxfordpets)
 - [Flowers102](#flowers102)
