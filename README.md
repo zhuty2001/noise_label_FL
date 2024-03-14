@@ -1,6 +1,4 @@
-# Global and Local Prompts Cooperation via Optimal Transport for Federated Learning [CVPR2024]
-The implementation of paper **Global and Local Prompts Cooperation via Optimal Transport for Federated Learning (CVPR2024)**.[[paper]](https://arxiv.org/pdf/2403.00041.pdf)
-![FedOTP-pipeline](FedOTP-pipeline.png "FedOTP-pipeline")
+# Noise Label Based Federated Learning With Prompt
 
 ## Requirements
 - Python 3.8+
@@ -44,14 +42,3 @@ IID=False
 and run `bash scripts/fedotp_few_shot.sh`
 
 After the experiments, all the results are finished and save to `output/`.
-
-## Citation
-If you find our work useful in your research, please consider citing:
-```
-@article{li2024global,
-  title={Global and Local Prompts Cooperation via Optimal Transport for Federated Learning},
-  author={Li, Hongxia and Huang, Wei and Wang, Jingya and Shi, Ye},
-  journal={arXiv preprint arXiv:2403.00041},
-  year={2024}
-}
-```
