@@ -486,7 +486,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", type=str, default="FedOTP", help="model of aggregation, choose from:FedOTP(used with GLP_OT), fedavg, fedprox, local(The last three are used with PromptFL)")
-    parser.add_argument("--trainer", type=str, default="GLP_OT", help="name of trainer, choose from: CLIP, PromptFL, GLP_OT")
+    parser.add_argument("--trainer", type=str, default="PromptFL", help="name of trainer, choose from: CLIP, PromptFL, GLP_OT")
     parser.add_argument('--round', type=int, default=10, help="number of communication round")
     parser.add_argument('--num_users', type=int, default=10, help="number of users: K")
     parser.add_argument('--frac', type=float, default=1, help='the fraction of clients: C')

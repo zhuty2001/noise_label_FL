@@ -112,6 +112,7 @@ def partition_data(dataset, datadir, partition, n_parties, beta=0.4, logdir=None
         net_dataidx_map_test = {i: batch_idxs_test[i] for i in range(n_parties)}
 
     elif partition == "iid-label100":
+        #print("n_parties:", n_parties)
         seed = 12345
         n_fine_labels = 100
         n_coarse_labels = 20
@@ -134,15 +135,20 @@ def partition_data(dataset, datadir, partition, n_parties, beta=0.4, logdir=None
 
         n_samples_train = y_train.shape[0]
         n_samples_test = y_test.shape[0]
+        print("n_samples_train:", n_samples_train)
+        #print("n_samples_train:", n_samples_train)
 
         selected_indices_train = rng.sample(list(range(n_samples_train)), n_samples_train)
         selected_indices_test = rng.sample(list(range(n_samples_test)), n_samples_test)
 
-        n_samples_by_client_train = int((n_samples_train / n_parties) // 5)
-        n_samples_by_client_test = int((n_samples_test / n_parties) // 5)
+        n_samples_by_client_train = int((n_samples_train / n_parties) // 50)
+        n_samples_by_client_test = int((n_samples_test / n_parties) // 50)
 
         indices_by_fine_labels_train = {k: list() for k in range(n_fine_labels)}
         indices_by_coarse_labels_train = {k: list() for k in range(n_coarse_labels)}
+
+        # print("indices_by_fine_labels_train:", indices_by_fine_labels_train)
+        # print("indices_by_coarse_labels_train:", indices_by_coarse_labels_train)
 
         indices_by_fine_labels_test = {k: list() for k in range(n_fine_labels)}
         indices_by_coarse_labels_test = {k: list() for k in range(n_coarse_labels)}
@@ -153,6 +159,9 @@ def partition_data(dataset, datadir, partition, n_parties, beta=0.4, logdir=None
 
             indices_by_fine_labels_train[fine_label].append(idx)
             indices_by_coarse_labels_train[coarse_label].append(idx)
+
+        # print("indices_by_fine_labels_train:", indices_by_fine_labels_train[1])
+        # print("indices_by_coarse_labels_train:", indices_by_coarse_labels_train[1])
 
         for idx in selected_indices_test:
             fine_label = y_test[idx]
@@ -169,25 +178,80 @@ def partition_data(dataset, datadir, partition, n_parties, beta=0.4, logdir=None
         net_dataidx_map_train = {i: np.ndarray(0, dtype=np.int64) for i in range(n_parties)}
         net_dataidx_map_test = {i: np.ndarray(0, dtype=np.int64) for i in range(n_parties)}
 
+        noisy_clients = 0
         for client_idx in range(n_parties):
-            coarse_idx = client_idx // 5
-            fine_idx = fine_labels_by_coarse_labels[coarse_idx]
-            for k in range(5):
-                fine_label = fine_idx[k]
-                sample_idx = rng.sample(list(indices_by_fine_labels_train[fine_label]), n_samples_by_client_train)
-                net_dataidx_map_train[client_idx] = np.append(net_dataidx_map_train[client_idx], sample_idx)
-                for idx in sample_idx:
-                    indices_by_fine_labels_train[fine_label].remove(idx)
+            max_noise_rate = 0.5
+            min_noise_rate = 0.1
+            noise_rate = rng.uniform(min_noise_rate, max_noise_rate)
+            noise_prob = 1.0
+            n_noise_samples = int(n_samples_by_client_train * noise_rate)
 
-        for client_idx in range(n_parties):
             coarse_idx = client_idx // 5
             fine_idx = fine_labels_by_coarse_labels[coarse_idx]
-            for k in range(5):
-                fine_label = fine_idx[k]
-                sample_idx = rng.sample(list(indices_by_fine_labels_test[fine_label]), n_samples_by_client_test)
-                net_dataidx_map_test[client_idx] = np.append(net_dataidx_map_test[client_idx], sample_idx)
-                for idx in sample_idx:
-                    indices_by_fine_labels_test[fine_label].remove(idx)
+
+            if rng.random() < noise_prob:
+                noisy_clients += 1
+                for k in range(5):
+                    fine_label = fine_idx[k]
+                    sample_idx = rng.sample(list(indices_by_fine_labels_train[fine_label]), n_samples_by_client_train)
+
+                    noise_indices = rng.choices(sample_idx, k=n_noise_samples)
+                    for noise_idx in noise_indices:
+                        new_fine_label = rng.choice(fine_labels_by_coarse_labels[coarse_idx])
+                        while new_fine_label == fine_label:
+                            new_fine_label = rng.choice(fine_labels_by_coarse_labels[coarse_idx])
+                        y_train[noise_idx] = new_fine_label
+
+                    net_dataidx_map_train[client_idx] = np.append(net_dataidx_map_train[client_idx], sample_idx)
+                    for idx in sample_idx:
+                        indices_by_fine_labels_train[fine_label].remove(idx)
+
+            else:
+                for k in range(5):
+                    fine_label = fine_idx[k]
+                    sample_idx = rng.sample(list(indices_by_fine_labels_train[fine_label]), n_samples_by_client_train)
+
+                    net_dataidx_map_train[client_idx] = np.append(net_dataidx_map_train[client_idx], sample_idx)
+                    for idx in sample_idx:
+                        indices_by_fine_labels_train[fine_label].remove(idx)
+
+
+        print("Noisy clients: %d" % noisy_clients)
+        
+        for client_idx in range(n_parties):
+            max_noise_rate = 0.5
+            min_noise_rate = 0.1
+            noise_rate = rng.uniform(min_noise_rate, max_noise_rate)
+            noise_prob = 1.0
+            n_noise_samples = int(n_samples_by_client_test * noise_rate)
+            
+            coarse_idx = client_idx // 5
+            fine_idx = fine_labels_by_coarse_labels[coarse_idx]
+        
+            if rng.random() < noise_prob:
+                for k in range(5):
+                    fine_label = fine_idx[k]
+                    sample_idx = rng.sample(list(indices_by_fine_labels_test[fine_label]), n_samples_by_client_test)
+        
+                    noise_indices = rng.choices(sample_idx, k=n_noise_samples)
+                    for noise_idx in noise_indices:
+                        new_fine_label = rng.choice(fine_labels_by_coarse_labels[coarse_idx])
+                        while new_fine_label == fine_label:
+                            new_fine_label = rng.choice(fine_labels_by_coarse_labels[coarse_idx])
+                        y_test[noise_idx] = new_fine_label
+        
+                    net_dataidx_map_test[client_idx] = np.append(net_dataidx_map_test[client_idx], sample_idx)
+                    for idx in sample_idx:
+                        indices_by_fine_labels_test[fine_label].remove(idx)
+
+            else:
+                for k in range(5):
+                    fine_label = fine_idx[k]
+                    sample_idx = rng.sample(list(indices_by_fine_labels_test[fine_label]), n_samples_by_client_test)
+        
+                    net_dataidx_map_test[client_idx] = np.append(net_dataidx_map_test[client_idx], sample_idx)
+                    for idx in sample_idx:
+                        indices_by_fine_labels_test[fine_label].remove(idx)
 
     elif partition == "noniid-labeluni":
         if dataset == "cifar10":
