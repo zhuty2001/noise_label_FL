@@ -11,7 +11,7 @@ LR=0.001
 GAMMA=1
 USERS=10
 FRAC=0.1
-ROUND=3
+ROUND=2
 NUM_PROMPT=2
 #DATASET=$1
 CFG=vit_b16  # config file
@@ -30,7 +30,7 @@ do
   do
     for SEED in 1
     do
-      DIR=output/${DATASET}_${PARTITION}_beta${BETA}/${MODEL}_${TRAINER}/nctx${NCTX}_csc${CSC}_ctp${CTP}/iid_${IID}_${USERS}users_${FRAC}frac_lr${LR}_${ROUND}round_seed${SEED}
+      DIR=output/${DATASET}_${PARTITION}_beta${BETA}/${MODEL}_${TRAINER}/nctx${NCTX}_csc${CSC}_ctp${CTP}/iid_${IID}_${USERS}users_${FRAC}frac_lr${LR}_${ROUND}round_seed${SEED}_noise_prob_1
       if [ -d "$DIR" ]; then
         echo "Oops! The results exist at ${DIR} (so skip this job)"
       else

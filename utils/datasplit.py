@@ -219,39 +219,38 @@ def partition_data(dataset, datadir, partition, n_parties, beta=0.4, logdir=None
         print("Noisy clients: %d" % noisy_clients)
         
         for client_idx in range(n_parties):
-            max_noise_rate = 0.5
-            min_noise_rate = 0.1
-            noise_rate = rng.uniform(min_noise_rate, max_noise_rate)
-            noise_prob = 1.0
-            n_noise_samples = int(n_samples_by_client_test * noise_rate)
+            # max_noise_rate = 0.5
+            # min_noise_rate = 0.1
+            # noise_rate = rng.uniform(min_noise_rate, max_noise_rate)
+            # noise_prob = 1.0
+            # n_noise_samples = int(n_samples_by_client_test * noise_rate)
             
             coarse_idx = client_idx // 5
             fine_idx = fine_labels_by_coarse_labels[coarse_idx]
         
-            if rng.random() < noise_prob:
-                for k in range(5):
-                    fine_label = fine_idx[k]
-                    sample_idx = rng.sample(list(indices_by_fine_labels_test[fine_label]), n_samples_by_client_test)
+            # if rng.random() < noise_prob:
+            #     for k in range(5):
+            #         fine_label = fine_idx[k]
+            #         sample_idx = rng.sample(list(indices_by_fine_labels_test[fine_label]), n_samples_by_client_test)
         
-                    noise_indices = rng.choices(sample_idx, k=n_noise_samples)
-                    for noise_idx in noise_indices:
-                        new_fine_label = rng.choice(fine_labels_by_coarse_labels[coarse_idx])
-                        while new_fine_label == fine_label:
-                            new_fine_label = rng.choice(fine_labels_by_coarse_labels[coarse_idx])
-                        y_test[noise_idx] = new_fine_label
+            #         noise_indices = rng.choices(sample_idx, k=n_noise_samples)
+            #         for noise_idx in noise_indices:
+            #             new_fine_label = rng.choice(fine_labels_by_coarse_labels[coarse_idx])
+            #             while new_fine_label == fine_label:
+            #                 new_fine_label = rng.choice(fine_labels_by_coarse_labels[coarse_idx])
+            #             y_test[noise_idx] = new_fine_label
         
-                    net_dataidx_map_test[client_idx] = np.append(net_dataidx_map_test[client_idx], sample_idx)
-                    for idx in sample_idx:
-                        indices_by_fine_labels_test[fine_label].remove(idx)
+            #         net_dataidx_map_test[client_idx] = np.append(net_dataidx_map_test[client_idx], sample_idx)
+            #         for idx in sample_idx:
+            #             indices_by_fine_labels_test[fine_label].remove(idx)
 
-            else:
-                for k in range(5):
-                    fine_label = fine_idx[k]
-                    sample_idx = rng.sample(list(indices_by_fine_labels_test[fine_label]), n_samples_by_client_test)
+            for k in range(5):
+                fine_label = fine_idx[k]
+                sample_idx = rng.sample(list(indices_by_fine_labels_test[fine_label]), n_samples_by_client_test)
         
-                    net_dataidx_map_test[client_idx] = np.append(net_dataidx_map_test[client_idx], sample_idx)
-                    for idx in sample_idx:
-                        indices_by_fine_labels_test[fine_label].remove(idx)
+                net_dataidx_map_test[client_idx] = np.append(net_dataidx_map_test[client_idx], sample_idx)
+                for idx in sample_idx:
+                    indices_by_fine_labels_test[fine_label].remove(idx)
 
     elif partition == "noniid-labeluni":
         if dataset == "cifar10":
