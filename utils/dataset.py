@@ -600,61 +600,61 @@ def download_url(url: str, root: str, filename: Optional[str] = None, md5: Optio
     import urllib
 
     root = os.path.expanduser(root)
-    if not filename:
-        filename = os.path.basename(url)
-    fpath = os.path.join(root, filename)
+    # if not filename:
+    #     filename = os.path.basename(url)
+    # fpath = os.path.join(root, filename)
 
-    os.makedirs(root, exist_ok=True)
+    # os.makedirs(root, exist_ok=True)
 
     # check if file is already present locally
-    if check_integrity(fpath, md5):
-        print('Using downloaded and verified file: ' + fpath)
-    else:  # download the file
-        try:
-            print('Downloading ' + url + ' to ' + fpath)
-            urllib.request.urlretrieve(
-                url, fpath,
-                reporthook=gen_bar_updater()
-            )
-        except (urllib.error.URLError, IOError) as e:  # type: ignore[attr-defined]
-            if url[:5] == 'https':
-                url = url.replace('https:', 'http:')
-                print('Failed download. Trying https -> http instead.'
-                      ' Downloading ' + url + ' to ' + fpath)
-                urllib.request.urlretrieve(
-                    url, fpath,
-                    reporthook=gen_bar_updater()
-                )
-            else:
-                raise e
-        # check integrity of downloaded file
-        if not check_integrity(fpath, md5):
-            raise RuntimeError("File not found or corrupted.")
+    # if check_integrity(fpath, md5):
+    #     print('Using downloaded and verified file: ' + fpath)
+    # else:  # download the file
+    #     try:
+    #         print('Downloading ' + url + ' to ' + fpath)
+    #         urllib.request.urlretrieve(
+    #             url, fpath,
+    #             reporthook=gen_bar_updater()
+    #         )
+    #     except (urllib.error.URLError, IOError) as e:  # type: ignore[attr-defined]
+    #         if url[:5] == 'https':
+    #             url = url.replace('https:', 'http:')
+    #             print('Failed download. Trying https -> http instead.'
+    #                   ' Downloading ' + url + ' to ' + fpath)
+    #             urllib.request.urlretrieve(
+    #                 url, fpath,
+    #                 reporthook=gen_bar_updater()
+    #             )
+    #         else:
+    #             raise e
+    #     # check integrity of downloaded file
+    #     if not check_integrity(fpath, md5):
+    #         raise RuntimeError("File not found or corrupted.")
 
 
 def _is_tarxz(filename: str) -> bool:
-    return filename.endswith(".tar.xz")
-
+    #return filename.endswith(".tar.xz")
+    return True
 
 def _is_tar(filename: str) -> bool:
-    return filename.endswith(".tar")
-
+    #return filename.endswith(".tar")
+    return True
 
 def _is_targz(filename: str) -> bool:
-    return filename.endswith(".tar.gz")
-
+    #return filename.endswith(".tar.gz")
+    return True
 
 def _is_tgz(filename: str) -> bool:
-    return filename.endswith(".tgz")
-
+    #return filename.endswith(".tgz")
+    return True
 
 def _is_gzip(filename: str) -> bool:
-    return filename.endswith(".gz") and not filename.endswith(".tar.gz")
-
+    #return filename.endswith(".gz") and not filename.endswith(".tar.gz")
+    return True
 
 def _is_zip(filename: str) -> bool:
-    return filename.endswith(".zip")
-
+    #return filename.endswith(".zip")
+    return True
 
 def extract_archive(from_path: str, to_path: Optional[str] = None, remove_finished: bool = False) -> None:
     if to_path is None:

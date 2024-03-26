@@ -10,7 +10,7 @@ NUM_USERS=2
 LR=0.001
 GAMMA=1
 USERS=10
-FRAC=0.1
+FRAC=1
 ROUND=2
 NUM_PROMPT=2
 #DATASET=$1
@@ -18,7 +18,7 @@ CFG=vit_b16  # config file
 CTP=end  # class token position (end or middle)
 NCTX=4  # number of context tokens
 CTXINIT=False
-#IID=False
+IID=False
 CSC=False  # class-specific context (False or True)
 USEALL=True
 BETA=0.1
@@ -26,7 +26,7 @@ BETA=0.1
 #SHOTS=$5  # number of shots (1, 2, 4, 8, 16)
 for DATASET in cifar100
 do
-  for PARTITION in iid-label100
+  for PARTITION in noniid-labeldir
   do
     for SEED in 1
     do

@@ -133,16 +133,18 @@ def partition_data(dataset, datadir, partition, n_parties, beta=0.4, logdir=None
         rng = random.Random(rng_seed)
         np.random.seed(rng_seed)
 
-        n_samples_train = y_train.shape[0]
-        n_samples_test = y_test.shape[0]
+        n_samples_train = y_train.shape[0] #50000
+        n_samples_test = y_test.shape[0] #10000
         print("n_samples_train:", n_samples_train)
         #print("n_samples_train:", n_samples_train)
 
         selected_indices_train = rng.sample(list(range(n_samples_train)), n_samples_train)
         selected_indices_test = rng.sample(list(range(n_samples_test)), n_samples_test)
+        print("selected_indices_train:", selected_indices_train)
+        print("len(selected_indices_train):", len(selected_indices_train))
 
-        n_samples_by_client_train = int((n_samples_train / n_parties) // 50)
-        n_samples_by_client_test = int((n_samples_test / n_parties) // 50)
+        n_samples_by_client_train = int((n_samples_train / n_parties) // 5)
+        n_samples_by_client_test = int((n_samples_test / n_parties) // 5)
 
         indices_by_fine_labels_train = {k: list() for k in range(n_fine_labels)}
         indices_by_coarse_labels_train = {k: list() for k in range(n_coarse_labels)}
@@ -179,15 +181,18 @@ def partition_data(dataset, datadir, partition, n_parties, beta=0.4, logdir=None
         net_dataidx_map_test = {i: np.ndarray(0, dtype=np.int64) for i in range(n_parties)}
 
         noisy_clients = 0
+        noisy_label = 0
         for client_idx in range(n_parties):
             max_noise_rate = 0.5
             min_noise_rate = 0.1
-            noise_rate = rng.uniform(min_noise_rate, max_noise_rate)
+            #noise_rate = rng.uniform(min_noise_rate, max_noise_rate)
+            noise_rate = 0.8
             noise_prob = 1.0
             n_noise_samples = int(n_samples_by_client_train * noise_rate)
 
             coarse_idx = client_idx // 5
             fine_idx = fine_labels_by_coarse_labels[coarse_idx]
+            temp_y_train = y_train.copy()
 
             if rng.random() < noise_prob:
                 noisy_clients += 1
@@ -201,8 +206,8 @@ def partition_data(dataset, datadir, partition, n_parties, beta=0.4, logdir=None
                         while new_fine_label == fine_label:
                             new_fine_label = rng.choice(fine_labels_by_coarse_labels[coarse_idx])
                         y_train[noise_idx] = new_fine_label
-
                     net_dataidx_map_train[client_idx] = np.append(net_dataidx_map_train[client_idx], sample_idx)
+
                     for idx in sample_idx:
                         indices_by_fine_labels_train[fine_label].remove(idx)
 
@@ -215,39 +220,12 @@ def partition_data(dataset, datadir, partition, n_parties, beta=0.4, logdir=None
                     for idx in sample_idx:
                         indices_by_fine_labels_train[fine_label].remove(idx)
 
-
-        print("Noisy clients: %d" % noisy_clients)
-        
         for client_idx in range(n_parties):
-            # max_noise_rate = 0.5
-            # min_noise_rate = 0.1
-            # noise_rate = rng.uniform(min_noise_rate, max_noise_rate)
-            # noise_prob = 1.0
-            # n_noise_samples = int(n_samples_by_client_test * noise_rate)
-            
             coarse_idx = client_idx // 5
             fine_idx = fine_labels_by_coarse_labels[coarse_idx]
-        
-            # if rng.random() < noise_prob:
-            #     for k in range(5):
-            #         fine_label = fine_idx[k]
-            #         sample_idx = rng.sample(list(indices_by_fine_labels_test[fine_label]), n_samples_by_client_test)
-        
-            #         noise_indices = rng.choices(sample_idx, k=n_noise_samples)
-            #         for noise_idx in noise_indices:
-            #             new_fine_label = rng.choice(fine_labels_by_coarse_labels[coarse_idx])
-            #             while new_fine_label == fine_label:
-            #                 new_fine_label = rng.choice(fine_labels_by_coarse_labels[coarse_idx])
-            #             y_test[noise_idx] = new_fine_label
-        
-            #         net_dataidx_map_test[client_idx] = np.append(net_dataidx_map_test[client_idx], sample_idx)
-            #         for idx in sample_idx:
-            #             indices_by_fine_labels_test[fine_label].remove(idx)
-
             for k in range(5):
                 fine_label = fine_idx[k]
                 sample_idx = rng.sample(list(indices_by_fine_labels_test[fine_label]), n_samples_by_client_test)
-        
                 net_dataidx_map_test[client_idx] = np.append(net_dataidx_map_test[client_idx], sample_idx)
                 for idx in sample_idx:
                     indices_by_fine_labels_test[fine_label].remove(idx)
@@ -331,6 +309,10 @@ def partition_data(dataset, datadir, partition, n_parties, beta=0.4, logdir=None
                 data_class_idx_test[c] = data_class_idx_test[c][end_idx_test:]
 
     elif partition == "noniid-labeldir":
+        seed = 12345
+        rng_seed = (seed if (seed is not None and seed >= 0) else int(time.time()))
+        rng = np.random.RandomState(rng_seed)
+        ori_y_train = y_train.copy()
         min_size = 0
         min_require_size = 10
         if dataset == 'cifar10':
@@ -356,15 +338,19 @@ def partition_data(dataset, datadir, partition, n_parties, beta=0.4, logdir=None
                 train_idx_k = np.where(y_train == k)[0]
                 test_idx_k = np.where(y_test == k)[0]
 
-                np.random.shuffle(train_idx_k)
-                np.random.shuffle(test_idx_k)
+                rng.shuffle(train_idx_k)
+                rng.shuffle(test_idx_k)
 
-                proportions = np.random.dirichlet(np.repeat(beta, n_parties))
+                proportions = rng.dirichlet(np.repeat(beta, n_parties))
                 proportions = np.array \
                     ([p * (len(idx_j) < N_train / n_parties) for p, idx_j in zip(proportions, idx_batch_train)])
+                
                 proportions = proportions / proportions.sum()
+                #每个类别应分配给每个客户端的样本数的累积总和
                 proportions_train = (np.cumsum(proportions) * len(train_idx_k)).astype(int)[:-1]
                 proportions_test = (np.cumsum(proportions) * len(test_idx_k)).astype(int)[:-1]
+                
+                #根据上述比例，拆分每个类别的样本索引，并将它们分配给相应的客户端。
                 idx_batch_train = [idx_j + idx.tolist() for idx_j, idx in zip(idx_batch_train, np.split(train_idx_k, proportions_train))]
                 idx_batch_test = [idx_j + idx.tolist() for idx_j, idx in zip(idx_batch_test, np.split(test_idx_k, proportions_test))]
 
@@ -373,10 +359,56 @@ def partition_data(dataset, datadir, partition, n_parties, beta=0.4, logdir=None
                 min_size = min(min_size_train, min_size_test)
 
         for j in range(n_parties):
-            np.random.shuffle(idx_batch_train[j])
-            np.random.shuffle(idx_batch_test[j])
+            rng.shuffle(idx_batch_train[j])
+            rng.shuffle(idx_batch_test[j])
             net_dataidx_map_train[j] = idx_batch_train[j]
             net_dataidx_map_test[j] = idx_batch_test[j]
+        #net_dataidx_map_train = {
+            #0: [5, 12, 7, ..., 45],  # 客户端0的训练数据索引列表
+            #1: [2, 4, 6, ..., 40],   # 客户端1的训练数据索引列表
+            #...                      # 等等
+            #n_parties-1: [3, 14, 15, ..., 55]  # 最后一个客户端的训练数据索引列表
+            #}
+        print("net_dataidx_map_train:", net_dataidx_map_train[0])
+        
+        noisy_clients = 0
+        noisy_label = 0
+        min_noise_rate = 0.2
+        max_noise_rate = 0.5
+        noise_prob = 0.0
+        for client_idx in range(n_parties):
+            client_samples = net_dataidx_map_train[client_idx]
+            client_samples_size = len(client_samples)
+            #noise_rate = np.random.uniform(min_noise_rate, max_noise_rate)
+            noise_rate = 1.0
+            n_noise_samples = int(client_samples_size * noise_rate)
+            if rng.random() < noise_prob:
+                noisy_clients += 1
+                noisy_label += n_noise_samples
+                noise_indices = rng.choice(client_samples, n_noise_samples, replace=False)
+                for idx in noise_indices:
+                    new_label = rng.choice(K)
+                    while new_label == y_train[idx]:
+                        new_label = rng.choice(K)
+                    y_train[idx] = new_label
+
+        import pickle
+        with open('DATA/cifar-100/cifar-100-python/train', 'rb') as fo:
+            dict = pickle.load(fo, encoding='bytes')
+    
+        dict[b'fine_labels'] = y_train.tolist()
+
+        with open('DATA/cifar-100/cifar-100-python/train', 'wb') as fo:
+            pickle.dump(dict, fo)
+
+        with open('DATA/cifar-100/cifar-100-python/train', 'rb') as fo:
+            dict = pickle.load(fo, encoding='bytes')
+        y_train = np.array(dict[b'fine_labels'])
+
+        diff = np.sum(y_train != ori_y_train)
+        print("diff:", diff)
+        print("Noisy clients: ", noisy_clients)
+        print("Noisy labels: ", noisy_label)  
 
     elif partition == "noniid-labeldir100":
         seed = 12345
