@@ -393,15 +393,15 @@ def partition_data(dataset, datadir, partition, n_parties, beta=0.4, logdir=None
                     y_train[idx] = new_label
 
         import pickle
-        with open('DATA/cifar-100/cifar-100-python/train', 'rb') as fo:
+        with open('noisy_DATA/cifar-100/cifar-100-python/train', 'rb') as fo:
             dict = pickle.load(fo, encoding='bytes')
     
         dict[b'fine_labels'] = y_train.tolist()
 
-        with open('DATA/cifar-100/cifar-100-python/train', 'wb') as fo:
+        with open('noisy_DATA/cifar-100/cifar-100-python/train', 'wb') as fo:
             pickle.dump(dict, fo)
 
-        with open('DATA/cifar-100/cifar-100-python/train', 'rb') as fo:
+        with open('noisy_DATA/cifar-100/cifar-100-python/train', 'rb') as fo:
             dict = pickle.load(fo, encoding='bytes')
         y_train = np.array(dict[b'fine_labels'])
 

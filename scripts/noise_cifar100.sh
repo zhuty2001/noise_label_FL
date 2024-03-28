@@ -1,12 +1,13 @@
 #!/bin/bash
 
 # custom config
-DATA="DATA/"
+DATA="noisy_DATA/"
 MODEL=fedavg
 TRAINER=PromptFL
 PRETRAINED=True
 NUM_USERS=2
-
+train_batch_size=2
+test_batch_size=2
 LR=0.001
 GAMMA=1
 USERS=10
