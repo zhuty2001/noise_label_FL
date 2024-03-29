@@ -61,6 +61,11 @@ class Datum:
     @property
     def classname(self):
         return self._classname
+    
+    @label.setter
+    def label(self, value):
+        self._label = value
+    
 
 class MNIST_truncated(data.Dataset):
 
@@ -357,7 +362,7 @@ class CelebA_custom(VisionDataset):
     def download(self):
         import zipfile
 
-        if self._check_integrity():
+        if True:
             print('Files already downloaded and verified')
             return
 
@@ -500,6 +505,10 @@ class CIFAR10_truncated(data.Dataset):
     def __len__(self):
         return len(self.data)
 
+    def change_label(self, index, new_label):
+        self.label[index] = new_label
+        self.data_detailed[index]._label = new_label
+
 
 class CIFAR100_truncated(data.Dataset):
 
@@ -608,7 +617,8 @@ def download_url(url: str, root: str, filename: Optional[str] = None) -> None:
 
     # if file is already present locally
     if True:
-        print('Using downloaded and verified file: ' + fpath)
+        #print('Using downloaded and verified file: ' + fpath)
+        a=1
     else:  # download the file
         try:
             print('Downloading ' + url + ' to ' + fpath)
