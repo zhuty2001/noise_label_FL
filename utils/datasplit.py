@@ -369,18 +369,18 @@ def partition_data(dataset, datadir, partition, n_parties, beta=0.4, logdir=None
             #...                      # 等等
             #n_parties-1: [3, 14, 15, ..., 55]  # 最后一个客户端的训练数据索引列表
             #}
-        print("net_dataidx_map_train:", net_dataidx_map_train[0])
+        #print("net_dataidx_map_train:", net_dataidx_map_train[0])
         
         noisy_clients = 0
         noisy_label = 0
         min_noise_rate = 0.2
         max_noise_rate = 0.5
-        noise_prob = 0.0
+        noise_prob = 1.0
         for client_idx in range(n_parties):
             client_samples = net_dataidx_map_train[client_idx]
             client_samples_size = len(client_samples)
-            #noise_rate = np.random.uniform(min_noise_rate, max_noise_rate)
-            noise_rate = 1.0
+            noise_rate = np.random.uniform(min_noise_rate, max_noise_rate)
+            #noise_rate = 0.5
             n_noise_samples = int(client_samples_size * noise_rate)
             if rng.random() < noise_prob:
                 noisy_clients += 1
@@ -388,27 +388,9 @@ def partition_data(dataset, datadir, partition, n_parties, beta=0.4, logdir=None
                 noise_indices = rng.choice(client_samples, n_noise_samples, replace=False)
                 for idx in noise_indices:
                     new_label = rng.choice(K)
-                    while new_label == y_train[idx]:
+                    while new_label == data_train[idx].label:
                         new_label = rng.choice(K)
-                    y_train[idx] = new_label
-
-        import pickle
-        with open('noisy_DATA/cifar-100/cifar-100-python/train', 'rb') as fo:
-            dict = pickle.load(fo, encoding='bytes')
-    
-        dict[b'fine_labels'] = y_train.tolist()
-
-        with open('noisy_DATA/cifar-100/cifar-100-python/train', 'wb') as fo:
-            pickle.dump(dict, fo)
-
-        with open('noisy_DATA/cifar-100/cifar-100-python/train', 'rb') as fo:
-            dict = pickle.load(fo, encoding='bytes')
-        y_train = np.array(dict[b'fine_labels'])
-
-        diff = np.sum(y_train != ori_y_train)
-        print("diff:", diff)
-        print("Noisy clients: ", noisy_clients)
-        print("Noisy labels: ", noisy_label)  
+                    data_train[idx].label=new_label
 
     elif partition == "noniid-labeldir100":
         seed = 12345
@@ -560,6 +542,7 @@ def partition_data(dataset, datadir, partition, n_parties, beta=0.4, logdir=None
                         ids += 1
 
     traindata_cls_counts = record_net_data_stats(y_train, net_dataidx_map_train, logdir)
+    print(traindata_cls_counts)
     testdata_cls_counts = record_net_data_stats(y_test, net_dataidx_map_test, logdir)
 
     return (data_train, data_test, lab2cname, classnames, net_dataidx_map_train, net_dataidx_map_test, traindata_cls_counts,
