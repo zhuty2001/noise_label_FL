@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # custom config
-DATA="noisy_DATA/"
+DATA="DATA/"
 MODEL=fedavg
 TRAINER=PromptFL
 PRETRAINED=True
@@ -25,13 +25,13 @@ USEALL=True
 BETA=0.1
 # SEED=1
 #SHOTS=$5  # number of shots (1, 2, 4, 8, 16)
-for DATASET in cifar100
+for DATASET in cifar10
 do
   for PARTITION in noniid-labeldir
   do
     for SEED in 1
     do
-      DIR=output/${DATASET}_${PARTITION}_beta${BETA}/${MODEL}_${TRAINER}/nctx${NCTX}_csc${CSC}_ctp${CTP}/iid_${IID}_${USERS}users_${FRAC}frac_lr${LR}_${ROUND}round_seed${SEED}_noise_prob_1
+      DIR=output/${DATASET}_${PARTITION}_beta${BETA}/${MODEL}_${TRAINER}/nctx${NCTX}_csc${CSC}_ctp${CTP}/iid_${IID}_${USERS}users_${FRAC}frac_lr${LR}_${ROUND}round_seed${SEED}_noisy
       if [ -d "$DIR" ]; then
         echo "Oops! The results exist at ${DIR} (so skip this job)"
       else
