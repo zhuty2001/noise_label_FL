@@ -371,20 +371,24 @@ def partition_data(dataset, datadir, partition, n_parties, beta=0.4, logdir=None
             #}
         #print("net_dataidx_map_train:", net_dataidx_map_train[0])
         
-        noisy_clients = 0
-        noisy_label = 0
         min_noise_rate = 0.2
         max_noise_rate = 0.5
-        noise_prob = 1.0
+        noise_prob = 0.6
+        
+        noisy_client_number = int(n_parties * noise_prob)
+        client_list = list(range(n_parties))
+
+        client_list = np.array(client_list)
+        noisy_client_list = rng.choice(client_list, noisy_client_number, replace=False)
+
         for client_idx in range(n_parties):
             client_samples = net_dataidx_map_train[client_idx]
             client_samples_size = len(client_samples)
-            noise_rate = np.random.uniform(min_noise_rate, max_noise_rate)
-            #noise_rate = 0.5
-            n_noise_samples = int(client_samples_size * noise_rate)
-            if rng.random() < noise_prob:
-                noisy_clients += 1
-                noisy_label += n_noise_samples
+
+            #Add noise to the data
+            if client_idx in noisy_client_list:
+                noise_rate = np.random.uniform(min_noise_rate, max_noise_rate)
+                n_noise_samples = int(client_samples_size * noise_rate)
                 noise_indices = rng.choice(client_samples, n_noise_samples, replace=False)
                 for idx in noise_indices:
                     new_label = rng.choice(K)
